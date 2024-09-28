@@ -1,4 +1,4 @@
-# aia-scp
+# AIA-SC
 
 #### 介绍
 
@@ -14,9 +14,10 @@
 
 #### 使用说明
 
-1.  xxxx
+1.  编译 check_fixing 模块
+```
+cd utils
+python setup.py build_ext --inplace
+```
 2.  xxxx
 3.  xxxx
-
-# aia-sc
-# aia-sc

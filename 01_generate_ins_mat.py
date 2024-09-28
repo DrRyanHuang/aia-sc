@@ -4,6 +4,7 @@ import numpy as np
 import scipy.sparse
 import time
 
+
 def generate_setcover(nrows, ncols, density, filename, rng, max_coef=100):
     """
     Generates a setcover instance with specified characteristics, and writes
@@ -36,21 +37,27 @@ def generate_setcover(nrows, ncols, density, filename, rng, max_coef=100):
 
     # compute number of rows per column
     indices = rng.choice(ncols, size=nnzrs)  # random column indexes
-    indices[:2 * ncols] = np.repeat(np.arange(ncols), 2)  # force at leats 2 rows per col
+    indices[: 2 * ncols] = np.repeat(
+        np.arange(ncols), 2
+    )  # force at leats 2 rows per col
     _, col_nrows = np.unique(indices, return_counts=True)
 
     # for each column, sample random rows
-    indices[:nrows] = rng.permutation(nrows) # force at least 1 column per row
+    indices[:nrows] = rng.permutation(nrows)  # force at least 1 column per row
     i = 0
     indptr = [0]
     for n in col_nrows:
 
         # empty column, fill with random rows
         if i >= nrows:
-            indices[i:i+n] = rng.choice(nrows, size=n, replace=False)
+            indices[i : i + n] = rng.choice(nrows, size=n, replace=False)
         elif i + n > nrows:
-            remaining_rows = np.setdiff1d(np.arange(nrows), indices[i:nrows], assume_unique=True)
-            indices[nrows:i+n] = rng.choice(remaining_rows, size=i+n-nrows, replace=False)
+            remaining_rows = np.setdiff1d(
+                np.arange(nrows), indices[i:nrows], assume_unique=True
+            )
+            indices[nrows : i + n] = rng.choice(
+                remaining_rows, size=i + n - nrows, replace=False
+            )
 
         i += n
         indptr.append(i)
@@ -60,33 +67,34 @@ def generate_setcover(nrows, ncols, density, filename, rng, max_coef=100):
 
     # sparce CSC to sparse CSR matrix
     A = scipy.sparse.csc_matrix(
-            (np.ones(len(indices), dtype=int), indices, indptr),
-            shape=(nrows, ncols)).tocsr()
+        (np.ones(len(indices), dtype=int), indices, indptr), shape=(nrows, ncols)
+    ).tocsr()
 
     # save matrix
     Amat = np.concatenate((c[np.newaxis, :], A.todense()), axis=0)
     txtname = filename[:-3]
-    np.savetxt(f'{txtname}.txt', Amat, fmt = "%d", delimiter=' ')
+    np.savetxt(f"{txtname}.txt", Amat, fmt="%d", delimiter=" ")
 
     indices = A.indices
     indptr = A.indptr
 
     # write problem
-    with open(filename, 'w') as file:
+    with open(filename, "w") as file:
         file.write("minimize\nOBJ:")
         file.write("".join([f" +{c[j]} x{j+1}" for j in range(ncols)]))
 
         file.write("\n\nsubject to\n")
         for i in range(nrows):
-            row_cols_str = "".join([f" +1 x{j+1}" for j in indices[indptr[i]:indptr[i+1]]])
+            row_cols_str = "".join(
+                [f" +1 x{j+1}" for j in indices[indptr[i] : indptr[i + 1]]]
+            )
             file.write(f"C{i}:" + row_cols_str + f" >= 1\n")
 
         file.write("\nbinary\n")
         file.write("".join([f" x{j+1}" for j in range(ncols)]))
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # small case
     nrows = 20
     ncols = 20
@@ -99,10 +107,10 @@ if __name__ == '__main__':
     denss = []
 
     n = 100
-    lp_dir = f'/home/dingzhenxin/workspace/DPexpc/data/setcover_{nrows}r_{ncols}c_{dens}d'
-    print(f'{n} instances in {lp_dir}')
+    lp_dir = f"./data/setcover_{nrows}r_{ncols}c_{dens}d"
+    print(f"{n} instances in {lp_dir}")
     os.makedirs(lp_dir, exist_ok=True)
-    filenames.extend([os.path.join(lp_dir, f'instance_{i+1}.lp') for i in range(n)])
+    filenames.extend([os.path.join(lp_dir, f"instance_{i+1}.lp") for i in range(n)])
     nrowss.extend([nrows] * n)
     ncolss.extend([ncols] * n)
     denss.extend([dens] * n)
@@ -110,9 +118,15 @@ if __name__ == '__main__':
     rng = np.random.RandomState(0)
 
     for filename, nrows, ncols, dens in zip(filenames, nrowss, ncolss, denss):
-        print(f'  generating file {filename} ...')
-        generate_setcover(nrows=nrows, ncols=ncols, density=dens, filename=filename, rng=rng, max_coef=max_coef)
-
+        print(f"  generating file {filename} ...")
+        generate_setcover(
+            nrows=nrows,
+            ncols=ncols,
+            density=dens,
+            filename=filename,
+            rng=rng,
+            max_coef=max_coef,
+        )
 
     # smiddle case
     nrows = 50
@@ -126,10 +140,10 @@ if __name__ == '__main__':
     denss = []
 
     n = 100
-    lp_dir = f'/home/dingzhenxin/workspace/DPexpc/data/setcover_{nrows}r_{ncols}c_{dens}d'
-    print(f'{n} instances in {lp_dir}')
+    lp_dir = f"./data/setcover_{nrows}r_{ncols}c_{dens}d"
+    print(f"{n} instances in {lp_dir}")
     os.makedirs(lp_dir, exist_ok=True)
-    filenames.extend([os.path.join(lp_dir, f'instance_{i+1}.lp') for i in range(n)])
+    filenames.extend([os.path.join(lp_dir, f"instance_{i+1}.lp") for i in range(n)])
     nrowss.extend([nrows] * n)
     ncolss.extend([ncols] * n)
     denss.extend([dens] * n)
@@ -137,10 +151,17 @@ if __name__ == '__main__':
     rng = np.random.RandomState(0)
 
     for filename, nrows, ncols, dens in zip(filenames, nrowss, ncolss, denss):
-        print(f'  generating file {filename} ...')
-        generate_setcover(nrows=nrows, ncols=ncols, density=dens, filename=filename, rng=rng, max_coef=max_coef)
+        print(f"  generating file {filename} ...")
+        generate_setcover(
+            nrows=nrows,
+            ncols=ncols,
+            density=dens,
+            filename=filename,
+            rng=rng,
+            max_coef=max_coef,
+        )
 
-  # middle case
+    # middle case
     nrows = 100
     ncols = 100
     dens = 0.1
@@ -152,10 +173,10 @@ if __name__ == '__main__':
     denss = []
 
     n = 100
-    lp_dir = f'/home/dingzhenxin/workspace/DPexpc/data/setcover_{nrows}r_{ncols}c_{dens}d'
-    print(f'{n} instances in {lp_dir}')
+    lp_dir = f"./data/setcover_{nrows}r_{ncols}c_{dens}d"
+    print(f"{n} instances in {lp_dir}")
     os.makedirs(lp_dir, exist_ok=True)
-    filenames.extend([os.path.join(lp_dir, f'instance_{i+1}.lp') for i in range(n)])
+    filenames.extend([os.path.join(lp_dir, f"instance_{i+1}.lp") for i in range(n)])
     nrowss.extend([nrows] * n)
     ncolss.extend([ncols] * n)
     denss.extend([dens] * n)
@@ -163,9 +184,15 @@ if __name__ == '__main__':
     rng = np.random.RandomState(0)
 
     for filename, nrows, ncols, dens in zip(filenames, nrowss, ncolss, denss):
-        print(f'  generating file {filename} ...')
-        generate_setcover(nrows=nrows, ncols=ncols, density=dens, filename=filename, rng=rng, max_coef=max_coef)
-
+        print(f"  generating file {filename} ...")
+        generate_setcover(
+            nrows=nrows,
+            ncols=ncols,
+            density=dens,
+            filename=filename,
+            rng=rng,
+            max_coef=max_coef,
+        )
 
     # big case
     nrows = 500
@@ -179,10 +206,10 @@ if __name__ == '__main__':
     denss = []
 
     n = 10
-    lp_dir = f'/home/dingzhenxin/workspace/DPexpc/data/setcover_{nrows}r_{ncols}c_{dens}d'
-    print(f'{n} instances in {lp_dir}')
+    lp_dir = f"./data/setcover_{nrows}r_{ncols}c_{dens}d"
+    print(f"{n} instances in {lp_dir}")
     os.makedirs(lp_dir, exist_ok=True)
-    filenames.extend([os.path.join(lp_dir, f'instance_{i+1}.lp') for i in range(n)])
+    filenames.extend([os.path.join(lp_dir, f"instance_{i+1}.lp") for i in range(n)])
     nrowss.extend([nrows] * n)
     ncolss.extend([ncols] * n)
     denss.extend([dens] * n)
@@ -190,43 +217,12 @@ if __name__ == '__main__':
     rng = np.random.RandomState(0)
 
     for filename, nrows, ncols, dens in zip(filenames, nrowss, ncolss, denss):
-        print(f'  generating file {filename} ...')
-        generate_setcover(nrows=nrows, ncols=ncols, density=dens, filename=filename, rng=rng, max_coef=max_coef)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print(f"  generating file {filename} ...")
+        generate_setcover(
+            nrows=nrows,
+            ncols=ncols,
+            density=dens,
+            filename=filename,
+            rng=rng,
+            max_coef=max_coef,
+        )
